@@ -54,8 +54,6 @@ resource "aws_lb_listener" "http" {
             port = "443"
             protocol = "HTTPS"
             status_code = "HTTP_301"
-            path = "/#{path}"
-            query = "#{query}"
         }
     }
 }
@@ -106,7 +104,7 @@ resource "aws_ecs_task_definition" "backend-task" {
     name        = "backend",
     image       = "${data.aws_ecr_repository.backend-repo.repository_url}:latest",
     cpu         = 256,
-    memory      = 768,
+    memory      = 1024,
     essential   = true,
     command     = ["node", "app.js"],
     environment = [
