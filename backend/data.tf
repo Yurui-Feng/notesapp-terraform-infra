@@ -26,3 +26,8 @@ data "aws_acm_certificate" "backend-cert" {
   statuses = ["ISSUED"]
   most_recent = true
 }
+
+data "aws_route53_zone" "mydomain" {
+    name = "fuyuri.com."
+    private_zone = false
+}

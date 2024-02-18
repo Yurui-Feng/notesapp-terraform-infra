@@ -11,6 +11,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
+
 resource "aws_ecs_cluster" "notesApp-cluster" {
     name = "notesApp-cluster"
 }
@@ -90,6 +91,14 @@ resource "aws_security_group" "alb_sg" {
     }
 }
 
+resource "aws_route53_record" "frontend_record" {
+    zone_id = data.aws_route53_zone.mydomain.zone_id
+    name = "notesapp.fuyuri.com"
+    type = "CNAME"
+    ttl = "300"
+    records = [aws_lb.frontend-lb.dns_name]
+}
+
 resource "aws_ecs_task_definition" "frontend-task" {
     family = "frontend"
     requires_compatibilities = ["FARGATE"]
@@ -102,7 +111,7 @@ resource "aws_ecs_task_definition" "frontend-task" {
     container_definitions = jsonencode([
       {
         name        = "frontend",
-        image       = "${data.aws_ecr_repository.frontend-repo.repository_url}:latest",
+        image       = "${data.aws_ecr_repository.frontend-repo.repository_url}:${var.frontend_image_tag}",
         cpu         = 256,
         memory      = 512,
         essential   = true,
@@ -119,6 +128,7 @@ resource "aws_ecs_task_definition" "frontend-task" {
             "awslogs-group"         = "/ecs/frontend",
             "awslogs-region"        = "us-west-2",
             "awslogs-stream-prefix" = "ecs"
+            "awslogs-create-group"  = "true"
           }
         }
       }
@@ -143,7 +153,7 @@ resource "aws_ecs_service" "frontend_service" {
     container_port = 80
   }
   network_configuration {
-    assign_public_ip = false
+    assign_public_ip = true
     subnets = data.aws_subnets.default.ids
     security_groups = [aws_security_group.alb_sg.id]
     }

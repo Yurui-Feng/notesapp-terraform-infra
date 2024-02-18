@@ -90,6 +90,14 @@ resource "aws_security_group" "alb_sg" {
     }
 }
 
+resource "aws_route53_record" "backend" {
+    zone_id = data.aws_route53_zone.mydomain.zone_id
+    name = "api.fuyuri.com"
+    type = "CNAME"
+    ttl = "300"
+    records = [aws_lb.backend-lb.dns_name]
+}
+
 resource "aws_ecs_task_definition" "backend-task" {
     family = "notes"
     requires_compatibilities = ["FARGATE"]
@@ -102,7 +110,7 @@ resource "aws_ecs_task_definition" "backend-task" {
     container_definitions = jsonencode([
   {
     name        = "backend",
-    image       = "${data.aws_ecr_repository.backend-repo.repository_url}:latest",
+    image       = "${data.aws_ecr_repository.backend-repo.repository_url}:${var.backend_image_tag}",
     cpu         = 256,
     memory      = 1024,
     essential   = true,
@@ -158,7 +166,7 @@ resource "aws_ecs_service" "backend_service" {
   }
 
   network_configuration {
-    assign_public_ip = false
+    assign_public_ip = true
     subnets = data.aws_subnets.default.ids
     security_groups = [aws_security_group.alb_sg.id]
   }

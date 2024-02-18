@@ -42,3 +42,8 @@ variable "subnets" {
   description = "Subnet IDs for the backend service"
   type        = list(string)
 }
+
+variable "backend_image_tag" {
+  description = "The tag of the backend Docker image in ECR"
+  type        = string
+}
